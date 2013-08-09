@@ -1,5 +1,10 @@
 import oscP5.*;
 import netP5.*;
+import codeanticode.syphon.*;
+
+SyphonServer server;
+PGraphics canvas;
+
 
 OscP5 oscP5;
 PImage img;
@@ -18,6 +23,8 @@ float[] next_bands;
 void setup() {
   //This init has to come before the OSC stuff, or the latter gets initialized twice
   size(1280, 720, P2D);
+  server = new SyphonServer(this, "Processing Syphon");
+  canvas = createGraphics(1280, 720, P2D);
   /* start oscP5, listening for incoming messages at port 3335 */
   //port = int(random(1024, 20480));
   port = 3334;
@@ -28,13 +35,13 @@ void setup() {
 }
 
 void draw_spectrogram (){
-  beginShape();
-  texture(img);
-  vertex(0, 0, 0, 0);
-  vertex(1280, 0, 1, 0);
-  vertex(1280, 720, 1, 1);
-  vertex(0, 720, 0, 1);
-  endShape();
+  canvas.beginShape();
+  canvas.texture(img);
+  canvas.vertex(0, 0, 0, 0);
+  canvas.vertex(1280, 0, 1, 0);
+  canvas.vertex(1280, 720, 1, 1);
+  canvas.vertex(0, 720, 0, 1);
+  canvas.endShape();
 }
 void draw() {
   //background(0);
@@ -42,6 +49,8 @@ void draw() {
     img.updatePixels();
     draw_spectrogram();
     data_updated = false;
+    //image(canvas, 0, 0);
+    server.sendImage(canvas);
   }
 }
 
