@@ -20,9 +20,6 @@
     * including detecting location of filepath (or env var?)
  * detect running java app w/out using pgrep, or spawn a subprocess explicitly using java.
    * https://forum.processing.org/topic/get-command-line-parameter-in-the-new-world-of-processing-java#25080000002398185
-   * this compact little command-line seems to do it:
-cd /Users/dan/src/sc/f_lustre/f_lustre_display/application.macosx/f_lustre_display.app/Contents/Resources/Java; java -cp Syphon.framework:jogl-all.jar:Syphon.jar:gluegen-rt-natives-macosx-universal.jar:jsyphon.jar:core.jar:gluegen-rt.jar:jogl-all-natives-macosx-universal.jar:oscP5.jar:f_lustre_display.jar f_lustre_display width=500 height=600
-   * I live the concise expressiveness of java.
    * capture debug output from processing app
  */
 (
@@ -46,9 +43,10 @@ cd /Users/dan/src/sc/f_lustre/f_lustre_display/application.macosx/f_lustre_displ
 	~trackerMaster.sendMsg("/trackerMaster/requestTuiostream", ~listenPort );
 };
 ~debugpostln = {|msg, lvl=1| (lvl>= (~debuglvl ? 0)).if({msg.postln})};
-//launch visualizer. We have to guess the launched PID, since the process is laundered though launchd
-~visualizercli="open % --args width=% height=% respondport=%;pgrep -f -n f_lustre_display".format(
-	~here +/+ "f_lustre_display/application.macosx/f_lustre_display.app".shellQuote,
+//launch visualizer.
+~visualizercli="cd % ; java -cp % f_lustre_display width=% height=% respondport=% ".format(
+	~here +/+ "f_lustre_display/application.macosx/f_lustre_display.app/Contents/Resources/Java".shellQuote,
+	"Syphon.framework:jogl-all.jar:Syphon.jar:gluegen-rt-natives-macosx-universal.jar:jsyphon.jar:core.jar:gluegen-rt.jar:jogl-all-natives-macosx-universal.jar:oscP5.jar:f_lustre_display.jar",
 	~pxwidth,
 	~pxheight,
 	~listenPort
@@ -299,7 +297,6 @@ Server.default.waitForBoot({fork {
 	//listen for notification from processing that the app has just started up
 	OSCdef.newMatching(\reanalyse, ~startAnalysis, "/viz/alive");
 	//launch said visualizer
-	~vizpid=~visualizercli.unixCmdGetStdOut.stripWhiteSpace.asInteger;
+	~vizpid=~visualizercli.unixCmd;
 }});
 )
-~startAnalysis.value();
